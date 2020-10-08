@@ -36,7 +36,7 @@ double* liczba = new double{42.};
 // ...
 delete liczba;
 ```
-Powyższy kod czytamy jako "zaalokuj dynamicznie pamięć na obiekt typu `double`, stwórz ten obiekt używając konstruktora[^1] z argumentem 42, a następnie przypisz adres utworzonego obiektu do zmiennej `liczba`". Dodatkowo możemy zauważyć, że `new` i `delete` są słowami kluczowymi języka, nie bazują na żadnym z nagłówków biblioteki standardowej (np. `stdlib.h`)[^2]. Dodajmy też, że składnia
+Powyższy kod czytamy jako "zaalokuj dynamicznie pamięć na obiekt typu `double`, stwórz ten obiekt używając konstruktora<sup>1</sup> z argumentem 42, a następnie przypisz adres utworzonego obiektu do zmiennej `liczba`". Dodatkowo możemy zauważyć, że `new` i `delete` są słowami kluczowymi języka, nie bazują na żadnym z nagłówków biblioteki standardowej (np. `stdlib.h`)<sup>2</sup>. Dodajmy też, że składnia
 ```C++
 const unsigned int n      = 100;
 double*            wektor = new double[n];
@@ -70,9 +70,9 @@ Przetestuj, czy stworzona przez Ciebie klasa zachowuje się zgodnie z oczekiwani
 
 ---
 
-[^1]: Formalnie, wbudowane typy nie mają konstruktorów, ale także możemy je inicjalizować przy użyciu nawiasów `{ }`. Prezentowany kod zadziała analogicznie dla dowolnego innego typu, także nie-POD.
+<sup>1</sup> Formalnie, wbudowane typy nie mają konstruktorów, ale także możemy je inicjalizować przy użyciu nawiasów `{ }`. Prezentowany kod zadziała analogicznie dla dowolnego innego typu, także nie-POD.
 
-[^2]: Ściślej mówiąc, operatory `new`, `new[]`, `delete` i `delete[]` są zdefiniowane w nagłówku `new`, ale jest on dołączany nawet bez jawnego zawołania `#include <new>`. Dla ciekawych: operatory te także można przeciążać, *vide* [dokumentacja](https://en.cppreference.com/w/cpp/memory/new/operator_new). Alokacja pamięci jest dość szerokim tematem, w który nie mamy niestety czasu się tu zagłębiać.
+<sup>2</sup> Ściślej mówiąc, operatory `new`, `new[]`, `delete` i `delete[]` są zdefiniowane w nagłówku `new`, ale jest on dołączany nawet bez jawnego zawołania `#include <new>`. Dla ciekawych: operatory te także można przeciążać, *vide* [dokumentacja](https://en.cppreference.com/w/cpp/memory/new/operator_new). Alokacja pamięci jest dość szerokim tematem, w który nie mamy niestety czasu się tu zagłębiać.
 
 ## Referencje
 Skoro wiemy już jak tworzyć i niszczyć zasoby, zastanówmy się teraz jak korzystać z nich w wydajny sposób. Bardzo często zdarza się, że chcemy wykorzystać jakiś obiekt wewnątrz funkcji (metod tej samej lub innej klasy, bądź też funkcji "wolnostojących"). Rozważmy poniższy kod, znany nam z C:
