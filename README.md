@@ -190,7 +190,7 @@ Zadajmy sobie teraz pytanie: przy konstrukcji obiektu typu `Prezent`, jaką dłu
 #### Zadanie 12
 Upewnij się, że kawałek kodu przedstawiony powyżej rzeczywiście działa tak jak twierdzi jego opis (zamień `***` na odpowiednią komendę drukowania). Usuń domyślny konstruktor klasy `Kokardka`. Czy kod się teraz skompiluje?
 
-W zadaniu 12 możemy zauważyć 2 problemy:
+W zadaniu 12. możemy zauważyć 2 problemy:
 - Inicjalizujemy pole `dlugosc` wartością 42, która zaraz jest nadpisywana. Jest to potencjalna niewydajność - gdyby pole to było drogie w konstrukcji (np. gdyby było typu RAII), wykonywalibyśmy drogą operację, która nie byłaby do niczego potrzebna.
 - Jeżeli klasa nie posiada domyślnego konstruktora, to, używając poznanych dotychczas elementów języka, nie moglibyśmy użyć jej jako pole innej klasy. Takie zachowanie byłoby niesamowicie problematyczne!
 
@@ -213,6 +213,9 @@ struct Prezent
 ```
 Jak widać, rozwiązanie to jest nie tylko bardziej wydajne, ale także zwięźlejsze w zapisie.
 **Uwaga:** W przypadku inicjalizowania wielu pól klasy w liście inicjalizacyjnej, o kolejności decyduje kolejność deklaracji pól w ciele klasy, nie kolejność występowania w liście inicjalizacyjnej. W związku z tym dobrą praktyką jest inicjalizacja pól jedynie na podstawie argumentów konstruktora, nie innych pól zainicjalizowanych gdzie indziej w liście.
+
+#### Zadanie 13
+Zmień konstruktor klasy `Wektor` tak, aby korzystał z listy inicjalizacyjnej.
 
 ## Szczególne metody klas
 Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. Co jednak zrobić, gdy świadomie chcemy skopiować obiekt? W tej części instrukcji powiemy trochę o 2 szczególnych metodach każdej klasy, które do tego służą. Szczególnych metod jest w sumie 5, jedną z nich - destruktor -już poznaliśmy. Poznamy teraz konstruktor kopiujący i kopiujący operator przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
