@@ -160,10 +160,27 @@ Sprawdź działanie operatora `[]`. Co stanie się, gdy zawołasz `wektor[0] = 4
 Zmodyfikuj operator `[]` tak, aby sięgnięcie po element leżący poza obecnym zakresem wektora skutkowało automatycznym zwiększeniem jego długości. Użyj napisanej wcześniej metody `zmienDlugosc`.
 
 #### Zadanie 11
-Sprawdź działanie klasy `Wektor`. Zauważ, że nie pozwala ona teraz sięgnąć do niedostępnych miejsc pamięci!
+Sprawdź działanie klasy `Wektor`. Zauważ, że nie pozwala ona teraz sięgnąć do niedostępnych miejsc pamięci! W najgorszym wypadku wyczerpiemy dostępną pamięć RAM.
 
 ## Szczególne metody klas
+Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. W tej części instrukcji powiemy trochę o 3 szczególnych metodach każdej klasy (jest ich tak naprawdę 5, ale o tym za chwilę). Jedną z nich - destruktor -już poznaliśmy, pozostałe 2 to konstruktor kopiujący i kopiujący operator przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
+```C++
+class T
+{
+    // Konstruktor kopiujący
+    T(const T&) { /* ... */ }
+    
+    // Kopiujący operator przypisania
+    T& operator=(const T&) { /* ... */ return *this; }
+    
+    // Destruktor
+    ~T() { /* ... */ }
+};
+```
+### Konstruktor kopiujący
 
+
+### Kopiujący operator przypisania
 
 ## Move semantics
 ### lvalue vs rvalue
