@@ -219,7 +219,7 @@ Jak widać, rozwiązanie to jest nie tylko bardziej wydajne, ale także zwięźl
 Zmień konstruktor klasy `Wektor` tak, aby korzystał z listy inicjalizacyjnej.
 
 ## Szczególne metody klas
-Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. Co jednak zrobić, gdy świadomie chcemy skopiować obiekt? W tej części instrukcji powiemy trochę o 2 szczególnych metodach każdej klasy, które do tego służą. Szczególnych metod jest w sumie 5, jedną z nich - destruktor - już poznaliśmy. Poznamy teraz konstruktor kopiujący i kopiujący operator przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
+Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. Co jednak zrobić, gdy świadomie chcemy skopiować obiekt? W tej części instrukcji powiemy trochę o 2 szczególnych metodach każdej klasy, które do tego służą. Szczególnych metod jest w sumie 5<sup>3</sup>, jedną z nich - destruktor - już poznaliśmy. Teraz zaznajomimy się z konstruktorem kopiującym i kopiującym operatorem przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
 ```C++
 class T
 {
@@ -268,9 +268,20 @@ T(const T& t) = delete;
 ```
 Usuwać można także inne (niespecjalne) metody oraz "wolnostojące" funckje. Jest to dość często spotykany zabieg, zapobiegający niepoprawnemu użytkowaniu kodu, który piszemy. W przypadku zawołania usuniętej funkcji, kompilator w jasny i zrozumiały sposób zakomunikuje błąd.
 
-### Kopiujący operator przypisania
+#### Zadanie 16
+Dodaj konstruktor kopiujący do klasy `Wektor`. Zwróć uwagę, że musisz zaalokować nowy blok pamięci. Zdecyduj, czy nowy wektor ma mieć pojemność równą długości, czy pojemności starego wektora. Zwróć uwagę, że język w żaden sposób nie narzuca żadnej z opcji - kopie obiektów nie muszą być wierne.
 
-## Move semantics
+### Kopiujący operator przypisania
+Kolejną specjalną metodą jest kopiujący operator przypisania. Wołany jest on w momencie, w którym do istniejącego obiektu `a` próbujemy przypisać wartość istniejącego obiektu `b`. Jego zdefiniowanie pozwala w bezpieczny sposób zwolnić zasoby, które mogą być trzymane przez `a`, zanim `a` skopiuje zasoby trzymane przez `b`. Zanim przećwiczymy to, zauważmy, że operator ten zwraca referencję typu klasy, dla której jest definiowany. Konkretnie, zwraca on referencję do obiektu, do którego nastąpiło przypisanie (czyli `a`). Celem tego zabiegu jest umożliwienie łączenia przypisań w jeden ciąg, np. `a = b = c = d;`. Jest on możliwy dzięki słowu kluczowemu `this`. `this` jest wskaźnikiem do obiektu, którego metoda jest wołana i można korzystać z niego w każdej metodzie klasy. Dodajmy na koniec, że zwracanie referencji do obiektu jest kwestią konwencji (w ten sposób postępuje też kompilator, jeżeli nie zdefiniujemy), a nie obowiązkiem.
+
+#### Zadanie 17
+Dodaj do klasy `Wektor` kopiujący operator przypisania. Zadbaj o to, żeby nie nastąpił wyciek pamięci. Upewnij się też, że Twój kod działa poprawnie gdy użytkownik spróbuje przypisać obiekt sam do siebie (`a = a`). Logika takiego przypisania jest wątpliwa, natomiast jest ono formalnie dopuszczalne.
+
+---
+
+<sup>3</sup> Niektórzy uważają też za metodę specjalną konstruktor domyślny.
+
+## Semantyka przenoszenia (*move semantics*)
 ### lvalue vs rvalue
 ### `std::move`
 ### move constructor, move assignment operator
