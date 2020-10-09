@@ -219,15 +219,15 @@ Jak widać, rozwiązanie to jest nie tylko bardziej wydajne, ale także zwięźl
 Zmień konstruktor klasy `Wektor` tak, aby korzystał z listy inicjalizacyjnej.
 
 ## Szczególne metody klas
-Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. Co jednak zrobić, gdy świadomie chcemy skopiować obiekt? W tej części instrukcji powiemy trochę o 2 szczególnych metodach każdej klasy, które do tego służą. Szczególnych metod jest w sumie 5, jedną z nich - destruktor -już poznaliśmy. Poznamy teraz konstruktor kopiujący i kopiujący operator przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
+Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. Co jednak zrobić, gdy świadomie chcemy skopiować obiekt? W tej części instrukcji powiemy trochę o 2 szczególnych metodach każdej klasy, które do tego służą. Szczególnych metod jest w sumie 5, jedną z nich - destruktor - już poznaliśmy. Poznamy teraz konstruktor kopiujący i kopiujący operator przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
 ```C++
 class T
 {
     // Konstruktor kopiujący
-    T(const T&) { /* ... */ }
+    T(const T& t) { /* ... */ }
     
     // Kopiujący operator przypisania
-    T& operator=(const T&) { /* ... */ return *this; }
+    T& operator=(const T& t) { /* ... */ return *this; }
     
     // Destruktor
     ~T() { /* ... */ }
@@ -238,15 +238,35 @@ Konstruktor kopiujący to konstruktor, który tworzy obiekt na podstawie innego 
 ```C++
 struct Liczba
 {
+    Liczba(int w)           : wartosc{w}         {}
+    Liczba(const Liczba& l) : wartosc{l.wartosc} {}
+    
     int wartosc;
 };
 
 int main()
 {
     Liczba a{1};
-    Liczba b{a};
+    Liczba b{a};  // W celu konstrukcji b wołamy konstruktor kopiujący z argumentem 'a'
+    Liczba c = a; // Tutaj także wołamy konstruktor kopiujący, vide lab. 1
 }
 ```
+
+#### Zadanie 14
+Skompiluj powyższy kod i upewnij się, że działa poprawnie. Dodaj do konstruktora kopiującego drukowanie informacji o konstrukcji. Upewnij się, że zostanie ona wydrukowana dwukrotnie.
+
+#### Zadanie 15
+Wykomentuj z kodu konstruktor kopiujący. Czy program się skompiluje?
+
+W zadaniu 15. widzimy, że konstruktor kopiujący jest domyślnie tworzony przez kompilator. To dlatego właśnie mówimy, że jest on specjalną metodą. Od standardu C\+\+11 specjalne metody możemy jawnie "zdefaultować":
+```C++
+T(const T& t) = default;
+```
+Jeżeli z kolei nie chcemy, aby klasa miała konstruktor kopiujący, możemy go także usunąć:
+```C++
+T(const T& t) = delete;
+```
+Usuwać można także inne (niespecjalne) metody oraz "wolnostojące" funckje. Jest to dość często spotykany zabieg, zapobiegający niepoprawnemu użytkowaniu kodu, który piszemy. W przypadku zawołania usuniętej funkcji, kompilator w jasny i zrozumiały sposób zakomunikuje błąd.
 
 ### Kopiujący operator przypisania
 
