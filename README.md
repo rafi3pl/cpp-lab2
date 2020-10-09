@@ -162,8 +162,60 @@ Zmodyfikuj operator `[]` tak, aby sięgnięcie po element leżący poza obecnym 
 #### Zadanie 11
 Sprawdź działanie klasy `Wektor`. Zauważ, że nie pozwala ona teraz sięgnąć do niedostępnych miejsc pamięci! W najgorszym wypadku wyczerpiemy dostępną pamięć RAM.
 
+## Listy inicjalizacyjne
+Przyjrzyjmy się teraz następującej parze klas:
+```C++
+struct Kokardka
+{
+    Kokardka()      { dlugosc = 42; }
+    Kokardka(int d) { dlugosc = d; }
+    
+    int dlugosc;
+};
+
+struct Prezent
+{
+    Prezent(int dk)
+    {
+        // ***
+        k.dlugosc = dk;
+    }
+    
+    Kokardka k;
+    // Inne pola ...
+};
+```
+Zadajmy sobie teraz pytanie: przy konstrukcji obiektu typu `Prezent`, jaką długość ma jego kokardka w linijce oznaczonej 3 gwiazdkami? Odpowiedź: 42. Wynika to z faktu, że wszystkie składowe pola klasy `Prezent`, muszą zostać zainicjalizowane przed wykonaniem ciała jego kostruktora. "Pod maską" wołamy zatem domyślny (bezargumentowy) konstruktor klasy `Kokardka`. Gdyby było inaczej, to w konstruktorze prezentu moglibyśmy odnosić się do kokardki, która nie została jeszcze stworzona, co jest logicznie niespójne i skutkowałoby błędami.
+
+#### Zadanie 12
+Upewnij się, że kawałek kodu przedstawiony powyżej rzeczywiście działa tak jak twierdzi jego opis (zamień `***` na odpowiednią komendę drukowania). Usuń domyślny konstruktor klasy `Kokardka`. Czy kod się teraz skompiluje?
+
+W zadaniu 12 możemy zauważyć 2 problemy:
+- Inicjalizujemy pole `dlugosc` wartością 42, która zaraz jest nadpisywana. Jest to potencjalna niewydajność - gdyby pole to było drogie w konstrukcji (np. gdyby było typu RAII), wykonywalibyśmy drogą operację, która nie byłaby do niczego potrzebna.
+- Jeżeli klasa nie posiada domyślnego konstruktora, to, używając poznanych dotychczas elementów języka, nie moglibyśmy użyć jej jako pole innej klasy. Takie zachowanie byłoby niesamowicie problematyczne!
+
+Szczęśliwie, istnieje mechanizm, który pozwala nam sterować konstrukcją składowych pól klasy: lista inicjalizacyjna. Spójrzmy, jak działa:
+```C++
+struct Kokardka
+{
+    Kokardka(int d) : dlugosc{d} {}
+    
+    int dlugosc;
+};
+
+struct Prezent
+{
+    Prezent(int dk) : k{dk} {}
+    
+    Kokardka k;
+    // Inne pola ...
+};
+```
+Jak widać, rozwiązanie to jest nie tylko bardziej wydajne, ale także zwięźlejsze w zapisie.
+**Uwaga:** W przypadku inicjalizowania wielu pól klasy w liście inicjalizacyjnej, o kolejności decyduje kolejność deklaracji pól w ciele klasy, nie kolejność występowania w liście inicjalizacyjnej. W związku z tym dobrą praktyką jest inicjalizacja pól jedynie na podstawie argumentów konstruktora, nie innych pól zainicjalizowanych gdzie indziej w liście.
+
 ## Szczególne metody klas
-Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. W tej części instrukcji powiemy trochę o 3 szczególnych metodach każdej klasy (jest ich tak naprawdę 5, ale o tym za chwilę). Jedną z nich - destruktor -już poznaliśmy, pozostałe 2 to konstruktor kopiujący i kopiujący operator przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
+Referencje i wskaźniki pozwalają nam unikać wykonywania kopii obiektów wtedy, gdy nie jest to konieczne. Co jednak zrobić, gdy świadomie chcemy skopiować obiekt? W tej części instrukcji powiemy trochę o 2 szczególnych metodach każdej klasy, które do tego służą. Szczególnych metod jest w sumie 5, jedną z nich - destruktor -już poznaliśmy. Poznamy teraz konstruktor kopiujący i kopiujący operator przypisania. Poniżej zamieszczono kawałek kodu ilustrujący ich definicje.
 ```C++
 class T
 {
@@ -178,7 +230,19 @@ class T
 };
 ```
 ### Konstruktor kopiujący
+Konstruktor kopiujący to konstruktor, który tworzy obiekt na podstawie innego obiektu jego samego typu. Jest on jednoargumentowy - przyjmuje referencję do obiektu, który ma zostać skopiowany. Referencja ta jest stała (`const`), gdyż kopiując obiekt z definicji nie mamy prawa zmienić jego stanu. Zaprezentujmy to na trywialnym przykładzie:
+```C++
+struct Liczba
+{
+    int wartosc;
+};
 
+int main()
+{
+    Liczba a{1};
+    Liczba b{a};
+}
+```
 
 ### Kopiujący operator przypisania
 
