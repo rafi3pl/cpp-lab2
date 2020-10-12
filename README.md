@@ -421,8 +421,23 @@ Zobaczymy teraz jak wyeliminować w takiej sytuacji nadmiarową kopię (bez żad
 
 ### lvalue vs rvalue
 
+
 ### `std::move`
 
 ### Konstruktor przenoszący
 
+#### Zadanie 18
+Dodaj do klasy `Wektor` konstruktor przenoszący.
+Pamiętaj, że musisz zmodyfikować także obiekt *z którego* przenosisz tak, aby jego zniszczenie nie powodowało niepożądanych skutków ubocznych.
+Podpowiedź: zawołanie operatora `delete` na wskaźniku, do którego została przypisana wartość `nullptr` ("lepszy" odpowiednik `NULL` z C) jest w pełni legalną operacją, która po prostu nic nie zrobi (ang. *no-op*).
+
 ### Przenoszący operator przypisania
+
+#### Zadanie 19
+Dodaj do klasy `Wektor` przenoszący operator przypisania.
+Pamiętaj o odpowiedniej modyfikacji obiektu *z którego* przenosisz oraz wykryciu przypadku, w którym obiekt przenoszony jest sam na siebie (`v = std::move(v)` nie powinno skutkować błędami).
+
+#### Zadanie na koniec
+Jeżeli nie jest dla Ciebie do końca jasne, kiedy wołany jest który konstruktor lub operator przenoszenia, nie przejmuj się.
+Pobaw się [tym kawałkiem kodu](https://godbolt.org/z/WYoYv5) - np. zakomentuj dla zawartej klasy semantykę przenoszenia, potwórz nowe obiekty i zobacz, jakie będą efekty.
+Być może pomocne okaże się także [to wideo](https://youtu.be/zUQz4LBBz7M) (nie przejmuj się kodem obecnym na ekranie przez pierwszą minutę).
