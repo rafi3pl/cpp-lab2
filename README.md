@@ -417,10 +417,46 @@ Jeżeli `S` jest klasą RAII, to ma miejsce następująca sekwencja wydarzeń:
 4. Podejmujemy pracę z `s`
 
 Punkt 3. jest niepotrzebny - naszym zamiarem było przypisanie zasobów od razu do `s`.
-Zobaczymy teraz jak wyeliminować w takiej sytuacji nadmiarową kopię (bez żadnej modyfikacji funkcji `main`).
+Semantyka przenoszenia pozwala wyeliminować w takiej sytuacji nadmiarową kopię (bez żadnej modyfikacji funkcji `main`).
 
 ### lvalue vs rvalue
+Kluczowa dla problemu opisanego wyżej jest tymczasowa natura wyniku inwokacji funkcji `getS`.
+Okazuje się, że kompilator potrafi rozróżnić tego typu obiekty od tych "namacalnych", zadeklarowanych przez programistę (np. `s` z przykładu powyżej).
+Tego typu "namacalne" obiekty należą do kategorii **lvalue**, a te ulotne **rvalue**.
+Formalna definicja (wraz z kilkoma dodatkowymi elementami taksonomii obiektów w C++) dostępna jest [w dokumentacji](https://en.cppreference.com/w/cpp/language/value_category), lecz w bieżącym tekście oprzemy się jedynie na intuicji.
+Lvalue i rvalue biorą swoje nazwy od strony znaku `=`, po której zazwyczaj występują (*left* lub *right*).
+Jeżeli będziemy umieli rozróżnić te kategorie obiektów, to będziemy mogli napisać 2 różne funkcje (w przykładzie wyżej będą to 2 różne operatory przypisania), które będą wołane w zależności od kategorii argumentu.
+Dla lvalue postępować będziemy tak jak zwykle (tzn. wykonujemy kopię zasobów), a dla rvalue będziemy mogli "kraść" zasoby, gdyż mamy gwarancję, że obiekt jest tymczasowy i nikt poza nami i tak nie może ich wykorzystać.
+Konstruktem języka C\+\+, który na to pozwala jest referencja rvalue (ang. *rvalue reference*, dalej RVR).
+RVR obiektu typu `T` zapisywane jest jako `T&&`.
+Spójrzmy, jak wygląda to w kodzie:
+```C++
+// Przeciążenie nr 1, zwykła referencja
+void print_int(int& i)  { std::cout << "Ref: " << i << '\n'; };
 
+// Przeciążenie nr 2, RVR
+void print_int(int&& i) { std::cout << "RVR: " << i << '\n'; };
+
+int getInt() { return 42; }
+
+int main()
+{
+	int liczba = 314159; // liczba to lvalue
+	
+	print_int(liczba);   // przeciążenie 1
+	print_int(getInt()); // przeciążenie 2
+	print_int(13);		 // przeciążenie 2, bo '13' to rvalue
+}
+```
+W drugim przeciężeniu funkcji `print_int` pracujemy z argumentem tak jak zwykle, RVR nie wymaga od nas żadnych szczególnych operacji.
+Mamy za to gwarancję, że argument ten nie "ucieknie" z naszej funkcji, tzn. po zakończeniu wykonania naszej funkcji zostanie on zniszczony (podobnie jak przy podawaniu argumentów przez wartość - kopia podanego argumentu jest niszczona pod koniec funkcji).
+Logiczne jest, że usunięcie jednego z powyższych przeciążeń spowoduje błąd kompilacji.
+Konwersja z LVL na RVR i *vice versa* jest nielegalna.
+Jeżeli piszemy funkcję, dla której nie ma znaczenia, czy argument jest RVR czy LVL, wtedy używamy stałej (`const`) referencji:
+```C++
+void print_int(const int& i) { std::cout << "const ref: " << i << '\n'; };
+```
+Jeżeli zdefiniujemy tylko powyższe przeciążenie, `main` z powyższego przykładu skompiluje się poprawnie.
 
 ### `std::move`
 
@@ -439,5 +475,5 @@ Pamiętaj o odpowiedniej modyfikacji obiektu *z którego* przenosisz oraz wykryc
 
 #### Zadanie na koniec
 Jeżeli nie jest dla Ciebie do końca jasne, kiedy wołany jest który konstruktor lub operator przenoszenia, nie przejmuj się.
-Pobaw się [tym kawałkiem kodu](https://godbolt.org/z/WYoYv5) - np. zakomentuj dla zawartej klasy semantykę przenoszenia, potwórz nowe obiekty i zobacz, jakie będą efekty.
+Pobaw się [tym kawałkiem kodu](https://godbolt.org/z/34YxMq) - np. zakomentuj dla zawartej klasy semantykę przenoszenia, stwórz nowe obiekty i zobacz, jakie będą efekty (oraz w jakiej kolejności drukowane będą informacje).
 Być może pomocne okaże się także [to wideo](https://youtu.be/zUQz4LBBz7M) (nie przejmuj się kodem obecnym na ekranie przez pierwszą minutę).
