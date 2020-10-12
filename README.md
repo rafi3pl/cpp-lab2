@@ -386,9 +386,43 @@ Logika takiego przypisania jest wątpliwa, natomiast jest ono formalnie dopuszcz
 
 ---
 
-<sup>3</sup> Niektórzy uważają konstruktor domyślny 6. za metodę specjalną.
+<sup>3</sup> Niektórzy uważają konstruktor domyślny za 6. metodę specjalną.
 
-## Semantyka przenoszenia (*move semantics*)
+## Semantyka przenoszenia
+Na koniec powiedzmy jeszcze o semantyce przenoszenia (ang. *move semantics*), obecnej w języku od standardu C\+\+11.
+Stanowi ona dość obszerny temat, którego nie mamy niestety czasu omówić w pełni.
+Warto jest jednak mieć świadomość istnienia tej funkcjonalności i rozumieć ideę, która za nią stoi.
+Czytelników zainteresowanych pełniejszym opisem zagadnienia odsyłamy np. [tutaj](https://youtu.be/St0MNEU5b0o) lub [tutaj](https://youtu.be/ZG59Bqo7qX4).
+
+Przyjrzyjmy się poniższemu kawałkowi kodu:
+```C++
+struct S{ /* ... */ };
+
+S getS() { return S{}; }
+
+int main()
+{
+	S s;
+	// Zrób coś z s...
+	// Nie potrzebujemy już starej wartości s, poddajemy ją "recyklingowi"
+	s = getS();
+}
+```
+W C\+\+98 i C\+\+03, instrukcja `s = getS();` wiąże się z niepotrzebną kopią.
+Zastanówmy się, dlaczego tak jest.
+Jeżeli `S` jest klasą RAII, to ma miejsce następująca sekwencja wydarzeń:
+1. Stworzenie zasobów wewnątrz `getS`
+2. Zasoby zostają przypisane do bezimiennego, tymczasowego wyniku `getS`
+3. Kopiujący operator przypisania klasy `S` przypisuje zasoby tego wyniku do obiektu `s`
+4. Podejmujemy pracę z `s`
+
+Punkt 3. jest niepotrzebny - naszym zamiarem było przypisanie zasobów od razu do `s`.
+Zobaczymy teraz jak wyeliminować w takiej sytuacji nadmiarową kopię (bez żadnej modyfikacji funkcji `main`).
+
 ### lvalue vs rvalue
+
 ### `std::move`
-### move constructor, move assignment operator
+
+### Konstruktor przenoszący
+
+### Przenoszący operator przypisania
