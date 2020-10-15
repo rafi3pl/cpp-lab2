@@ -499,7 +499,7 @@ int main()
 W powyższym przykładzie zostanie wywołane przeciążenie `fun(const S&)`, gdyż `s` jest lvalue.
 Po zawołaniu funkcji `fun` zmienna `s` nie jest nam już jednak potrzebna.
 Chcielibyśmy zatem przenieść `s` do `fun` i pozwolić tej funkcji zutylizować zasoby trzymane przez `s` w sposób, który uzna za stosowny.
-Właśnie do tego służy funkcja `std::move`.
+Właśnie do tego służy funkcja `std::move` (z nagłówka `utility`).
 ```C++
 // S i fun jak wyżej
 
@@ -555,7 +555,7 @@ int main()
 ```
 Mamy tylko jeden problem: w powyższym programie dokonujemy dwukrotnie alokacji pamięci.
 Zobaczmy, jak przy użyciu semantyki przenoszenia możemy pozbyć się jednej z alokacji.
-Dodajemy do `S` pusty (lub lepiej, zdefaultowany: `S() = default`) konstruktor domyślny oraz następujące przeciążenie funkcji `pow2`
+Dodajemy do `S` pusty (lub lepiej, zdefaultowany: `S() = default`) konstruktor domyślny oraz następujące przeciążenie funkcji `pow2`, które "kradnie" zasoby argumentu:
 ```C++
 S pow2(S&& arg)
 {
@@ -584,18 +584,54 @@ int main()
 }
 ```
 Zauważ, że gdybyśmy nie wyzerowali w funkcji `pow2(S&& arg)` wskaźnika zmiennej `arg`, to pod koniec funkcji `main` operator `delete` zostałby zawołany dwukrotnie na wskaźnikach do tego samego adresu w pamięci (przy destrukcji `s1` i `s2`), co spowodowałoby błąd programu.
+W praktyce, gdy korzystamy z klas napisanych przez kogoś innego, bardzo ciężko może być nam zrozumieć w jaki sposób zwolnić lub "ukraść" zasoby danego obiektu.
+Zamiast tego, korzystamy ze zdefiniowanych przez autorów danej klasy specjalnych metod: konstruktora przenoszącego i przenoszącego operatora przypisania.
 
 ### Konstruktor przenoszący
+Jak nietrudno się domyślić, konstruktor przenoszący pozwala skonstruować obiekt poprzez "pochłonięcie" innego obiektu tego samego typu.
+Sygnatura takiego konstruktora dla klasy `T` to `T(T&&)`.
+Gdyby klasa `S` z ostatniego przykładu miała taki konstruktor, moglibyśmy uprościć funkcję `pow2`:
+```C++
+S pow2(S&& arg)
+{
+    // konstruktor przenoszący wykonuje za nas całą pracę
+    S ret_val {std::move(arg)};
+	
+    *ret_val.liczba = *ret_val.liczba * *ret_val.liczba;	
+    return ret_val;
+}
+```
+Jest to zgodne z zasadą DRY (*don't repeat yourself*) - definiujemy konstruktor przenoszący raz, a następnie korzystamy z niego w wielu różnych miejscach.
+Nie musimy pamiętać za każdym razem o zerowaniu wskaźników itp.
+Dodatkowo nasz kod jest krótszy.
+Zwróćmy jeszcze uwagę, że pomimo tego, że `arg` jest podane jako RVR, musimy wewnątrz `pow2` ponownie zawołać `std::move`.
+Argument podany z zewnątrz jako RVR funkcjonuje wewnątrz jak LVL.
+Może to być nieco mylące, ale łatwo zapamiętać to w następujący sposób: przenosząc obiekt do każdej kolejnej funkcji musimy zawołać `std::move`, czyli jeżeli "zanurzamy" obiekt na głębokość *n* funkcji, to musimy zawołać `std::move` *n* razy.
 
 #### Zadanie 18
 Dodaj do klasy `Wektor` konstruktor przenoszący.
 Pamiętaj, że musisz zmodyfikować także obiekt *z którego* przenosisz tak, aby jego zniszczenie nie powodowało niepożądanych skutków ubocznych.
 
 ### Przenoszący operator przypisania
+Ostatnią szczególną metodą klas jest przenoszący operator przypisania, o sygnaturze `T operator=(T&&)`.
+Przenosi on obiekt `b` na obiekt `a` (gdzie `a` i `b` nie muszą być różne).
 
 #### Zadanie 19
 Dodaj do klasy `Wektor` przenoszący operator przypisania.
 Pamiętaj o odpowiedniej modyfikacji obiektu *z którego* przenosisz oraz wykryciu przypadku, w którym obiekt przenoszony jest sam na siebie (`v = std::move(v)` nie powinno skutkować błędami).
+
+## Zasada 0, zasada 5
+Znamy już 5 szczególnych metod klas:
+- konstruktor kopiujący
+- kopiujący operator przypisania
+- konstruktor przenoszący
+- przenoszący operator przypisania
+- destruktor
+
+Jednymi z elementarnych zasad w programowaniu obiektowym w C\+\+ są zasady zera i zasada pięciu.
+Zasada 0 mówi, że jeżeli nie jest nie chcemy wymusić żadnego szczególnego zachowania przy kopiowaniu, prznoszeniu lub niszczeniu obiektów, to nie należy definiować żadnej ze szczególnych metod i korzystać z tych, które zostaną domyślnie wygenerowane przez kompilator.
+Zasada 5 mówi z kolei, że jeżeli definiujemy choć jedną ze szczególnych metod, to powinniśmy także zdefiniować (lub zdefaultować, jeżeli to możliwe) wszystkie pozostałe.
+Zasady te pomagają unikać bugów wynikających np. z nieświadomego zawołania kopiowania tam, gdzie możnaby jakiś obiekt przenieść.
 
 #### Zadanie na koniec
 Jeżeli nie jest dla Ciebie do końca jasne, kiedy wołany jest który konstruktor lub operator przenoszenia, nie przejmuj się.
