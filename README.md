@@ -485,7 +485,7 @@ Zobaczmy, dlaczego w ogóle moglibyśmy chcieć to zrobić:
 ```C++
 struct S { /* duża klasa trzymająca zasobamy */ };
 void fun(const S&) { /* ... */ } // przypadek ogólny
-void fun(S&&) { /* ... */ }	     // optymalizacja dla RVR
+void fun(S&&) { /* ... */ }      // optymalizacja dla RVR
 
 int main()
 {
@@ -507,7 +507,7 @@ int main()
 {
     S s;
     fun(std::move(s));
-	// s zostało przeniesione do fun
+    // s zostało przeniesione do fun
 }
 ```
 `std::move` zamienia referencję do lvalue na referencję do rvalue, co pozwala zawołać odpowiednie przeciążenie `fun`.
@@ -531,7 +531,7 @@ Rozważmy klasę `S`, która dynamicznie alokuje zmienną typu `int`:
 struct S
 {
     S(int li) : liczba{new int{li}} { }
-	~S() { delete liczba; }
+    ~S() { delete liczba; }
 
     int* liczba;
 };
@@ -560,16 +560,16 @@ Dodajemy do `S` pusty (lub lepiej, zdefaultowany: `S() = default`) konstruktor d
 S pow2(S&& arg)
 {
     // niezainicjalizowany wskaźnik
-	S ret_val;
+    S ret_val;
 	
-	// przepisujemy wskaźnik, nie ma alokacji
-	ret_val.liczba = arg.liczba;
-	
-	// podnosimy liczbę do kwadratu
-	*ret_val.liczba = *ret_val.liczba * *ret_val.liczba;
-	
-	// Zerujemy wskaźnik arg
-	arg.liczba = nullptr;
+    // przepisujemy wskaźnik, nie ma alokacji
+    ret_val.liczba = arg.liczba;
+
+    // podnosimy liczbę do kwadratu
+    *ret_val.liczba = *ret_val.liczba * *ret_val.liczba;
+
+    // Zerujemy wskaźnik arg
+    arg.liczba = nullptr;
 	
     return ret_val;
 }
