@@ -402,10 +402,10 @@ S getS() { return S{}; }
 
 int main()
 {
-	S s;
-	// Zrób coś z s...
-	// Nie potrzebujemy już starej wartości s, poddajemy ją "recyklingowi"
-	s = getS();
+    S s;
+    // Zrób coś z s...
+    // Nie potrzebujemy już starej wartości s, poddajemy ją "recyklingowi"
+    s = getS();
 }
 ```
 W C\+\+98 i C\+\+03, instrukcja `s = getS();` wiąże się z niepotrzebną kopią.
@@ -445,27 +445,151 @@ int main()
 	
 	print_int(liczba);   // przeciążenie 1
 	print_int(getInt()); // przeciążenie 2
-	print_int(13);		 // przeciążenie 2, bo '13' to rvalue
+	print_int(13);	     // przeciążenie 2, bo '13' to rvalue
 }
 ```
-W drugim przeciężeniu funkcji `print_int` pracujemy z argumentem tak jak zwykle, RVR nie wymaga od nas żadnych szczególnych operacji.
-Mamy za to gwarancję, że argument ten nie "ucieknie" z naszej funkcji, tzn. po zakończeniu wykonania naszej funkcji zostanie on zniszczony (podobnie jak przy podawaniu argumentów przez wartość - kopia podanego argumentu jest niszczona pod koniec funkcji).
-Logiczne jest, że usunięcie jednego z powyższych przeciążeń spowoduje błąd kompilacji.
-Konwersja z LVL na RVR i *vice versa* jest nielegalna.
+W drugim przeciężeniu funkcji `print_int` pracujemy z argumentem normalnie - RVR nie wymaga od nas żadnych szczególnych operacji.
+Mamy za to gwarancję, że argument ten nie "ucieknie" z naszej funkcji, tzn. po zakończeniu wykonania naszej funkcji nikt inny nie będzie próbował go użyć.
+Możemy więc zrobić z nim co chcemy, np. zwolnić jego zasoby po ich wykorzystaniu.
+Podkreślmy też, że usunięcie jednego z powyższych przeciążeń spowoduje błąd kompilacji.
+
 Jeżeli piszemy funkcję, dla której nie ma znaczenia, czy argument jest RVR czy LVL, wtedy używamy stałej (`const`) referencji:
 ```C++
 void print_int(const int& i) { std::cout << "const ref: " << i << '\n'; };
 ```
 Jeżeli zdefiniujemy tylko powyższe przeciążenie, `main` z powyższego przykładu skompiluje się poprawnie.
+Dzieje się tak dzięki temu, że stałe referencje rządzą się specjalnymi zasadami przedłużania życia (ang. `lifetime extension`), destrukcja obiektu na które wskazują odwlekana jest do czasu wyjścia ze scope'u referencji.
+W praktyce oznacza to, że poniższy kod jest poprawny
+```C++
+const int& i = getInt(); // OK, lifetime zwróconej wartości przedłużony
+```
+ale ten już nie
+```C++
+int& i = getInt(); // błąd kompilacji: próba przypisania RVR do LVR
+```
+
+Podsumowując, jako argumenty funkcji (w tym metod klas) możemy przyjąć:
+- Stałe referencje (`const T&`), jeżeli nie potrzebujemy zmodyfikować danego argumentu, a jedynie dokonać jego inspekcji.
+Nie wykonujemy wtedy kopii obiektu.
+Ta opcja potrafi obsłużyć także sytuację, w której użytkownik poda do funkcji obiekt tymczasowy.
+- Referencję lvalue (`T&`), jeżeli chcemy zmodyfikować w funkcji obiekt spoza niej.
+Tej opcji raczej nie stosujemy, gdyż może ona prowadzić do bugów (niechcący podajemy argument, którego wcale nie chcieliśmy modyfikować).
+Zamiast tego korzystamy z argumentów wyjściowych.
+`a = fun(a);` bardziej jawnie wyraża nasze intencje niż `fun(a);`
+- Referencję rvalue, gdy chcemy obsłużyć sytuację, w której nasza funkcja przejmuje własność nad jakimś obiektem.
+Często stosujemy tę opcję obok innych przeciążeń (np. obok stałej referencji) jako optymalizacja dla szczególnego przypadku.
 
 ### `std::move`
+W C\+\+ istnieje także sposób, aby zamienić referencję do rvalue na referencję do lvalue.
+Zobaczmy, dlaczego w ogóle moglibyśmy chcieć to zrobić:
+```C++
+struct S { /* duża klasa trzymająca zasobamy */ };
+void fun(const S&) { /* ... */ } // przypadek ogólny
+void fun(S&&) { /* ... */ }	     // optymalizacja dla RVR
+
+int main()
+{
+    S s;
+	// Pracujemy z s...
+	fun(s);
+	// Teraz nie potrzebujemy s
+	// Pracujemy dalej nad czymś innym...
+}
+```
+W powyższym przykładzie zostanie wywołane przeciążenie `fun(const S&)`, gdyż `s` jest lvalue.
+Po zawołaniu funkcji `fun` zmienna `s` nie jest nam już jednak potrzebna.
+Chcielibyśmy zatem przenieść `s` do `fun` i pozwolić tej funkcji zutylizować zasoby trzymane przez `s` w sposób, który uzna za stosowny.
+Właśnie do tego służy funkcja `std::move`.
+```C++
+// S i fun jak wyżej
+
+int main()
+{
+    S s;
+    fun(std::move(s));
+	// s zostało przeniesione do fun
+}
+```
+`std::move` zamienia referencję do lvalue na referencję do rvalue, co pozwala zawołać odpowiednie przeciążenie `fun`.
+Podkreślmy, że sama funkcja `std::move` nie potrafi w magiczny sposób dokonać transferu zasobów, za to odpowiedzialna jest już implementacja `fun`.
+
+Po przesunięciu obiektu do funkcji lub innego obiektu (`a = std::move(b);`) pozostaje on w nieokreślonym, ale poprawnym stanie.
+Oznacza to, że po zawołaniu `std::move(s)`, nie wolno nam już korzystać z `s`!
+Jest to logiczne, gdyż `fun` przejęła własność nad tym obiektem, a zatem `main` nie może już go dotknąć.
+Zasadę tę musimy jednak stosować sami, kompilator nie potraktuje tego jako błąd (może co najwyżej wydać ostrzeżenie).
+Używanie obiektów, które zostały przesunięte stanowi przykład nieokreślonego zachowania (ang. *undefined behavior*), tzn. operacji, której efekt nie jest określony przez standard języka C\+\+, a zatem konsekwencje mogą być dowolne (przeważnie złe), a także różnić się w zależności od kompilatora, platformy itp.
+Jedyne, co wolno nam zrobić dalej ze zmienną `s` to przypisać do niej nową wartość, wtedy możemy ponownie podjąć z nią pracę.
+
+Uważny czytelnik zauważy, że od opisanej wyżej zasady obowiązuje jeden kluczowy wyjątek.
+Obiekt `s` został zadeklarowany w scope'ie funkcji `main`, a zatem przed jego opuszczeniem musi zostać zawołany jego destruktor.
+Funkcja `fun` musi zatem zadbać o to, żeby obiekt ten został pozostawiony w "zniszczalnym" stanie, np. poprzez wyzerowanie wewnętrznych wskaźników swojego argumentu (`double* a = nullptr; delete a;` jest w pełni poprawną operacją, która po prostu nic nie zrobi, ang. *no-op*).
+Z tego powodu często mówi się, że w C\+\+ obowiązuje "nienieszczące przesunięcie" (ang. *nondestructive move*).
+
+Przećwiczmy to w praktyce.
+Rozważmy klasę `S`, która dynamicznie alokuje zmienną typu `int`:
+```C++
+struct S
+{
+    S(int li) : liczba{new int{li}} { }
+	~S() { delete liczba; }
+
+    int* liczba;
+};
+```
+Chcielibyśmy napisać funkcję `pow2`, która przyjmuje obiekt typu `S` i zwraca obiekt tego samego typu, którego pole `liczba` jest kwadratem pola `liczba` argumentu.
+Wariant dla stałej referencji wygląda następująco:
+```C++
+S pow2(const S& arg)
+{
+    return S{*arg.liczba * *arg.liczba};
+}
+```
+Następujący program zwróci 4:
+```C++
+int main()
+{
+    S s1{2};
+    S s2 = pow2(s1);
+    return *s2.liczba;
+}
+```
+Mamy tylko jeden problem: w powyższym programie dokonujemy dwukrotnie alokacji pamięci.
+Zobaczmy, jak przy użyciu semantyki przenoszenia możemy pozbyć się jednej z alokacji.
+Dodajemy do `S` pusty (lub lepiej, zdefaultowany: `S() = default`) konstruktor domyślny oraz następujące przeciążenie funkcji `pow2`
+```C++
+S pow2(S&& arg)
+{
+    // niezainicjalizowany wskaźnik
+	S ret_val;
+	
+	// przepisujemy wskaźnik, nie ma alokacji
+	ret_val.liczba = arg.liczba;
+	
+	// podnosimy liczbę do kwadratu
+	*ret_val.liczba = *ret_val.liczba * *ret_val.liczba;
+	
+	// Zerujemy wskaźnik arg
+	arg.liczba = nullptr;
+	
+    return ret_val;
+}
+```
+Teraz możemy wykorzystać `std::move`, aby zaoszczędzić jedną alokację:
+```C++
+int main()
+{
+    S s1{2};
+    S s2 = pow2(std::move(s1));
+    return *s2.liczba;
+}
+```
+Zauważ, że gdybyśmy nie wyzerowali w funkcji `pow2(S&& arg)` wskaźnika zmiennej `arg`, to pod koniec funkcji `main` operator `delete` zostałby zawołany dwukrotnie na wskaźnikach do tego samego adresu w pamięci (przy destrukcji `s1` i `s2`), co spowodowałoby błąd programu.
 
 ### Konstruktor przenoszący
 
 #### Zadanie 18
 Dodaj do klasy `Wektor` konstruktor przenoszący.
 Pamiętaj, że musisz zmodyfikować także obiekt *z którego* przenosisz tak, aby jego zniszczenie nie powodowało niepożądanych skutków ubocznych.
-Podpowiedź: zawołanie operatora `delete` na wskaźniku, do którego została przypisana wartość `nullptr` ("lepszy" odpowiednik `NULL` z C) jest w pełni legalną operacją, która po prostu nic nie zrobi (ang. *no-op*).
 
 ### Przenoszący operator przypisania
 
