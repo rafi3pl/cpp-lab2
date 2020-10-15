@@ -620,7 +620,7 @@ Przenosi on obiekt `b` na obiekt `a` (gdzie `a` i `b` nie muszą być różne).
 Dodaj do klasy `Wektor` przenoszący operator przypisania.
 Pamiętaj o odpowiedniej modyfikacji obiektu *z którego* przenosisz oraz wykryciu przypadku, w którym obiekt przenoszony jest sam na siebie (`v = std::move(v)` nie powinno skutkować błędami).
 
-## Zasada 0, zasada 5
+### Zasada 0, Zasada 5
 Znamy już 5 szczególnych metod klas:
 - konstruktor kopiujący
 - kopiujący operator przypisania
