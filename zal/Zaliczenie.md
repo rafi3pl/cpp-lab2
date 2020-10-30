@@ -1,7 +1,7 @@
 # Zaliczenie Laboratorium II
 Masz daną klasę `Resource`, która:
 - posiada konstruktor domyślny
-- posiada 5 dobrze zdefiniowanych metod specjalnych (choć to akurat nie musi mieć znaczenia dla Twojego rozwiązania)
+- posiada 5 dobrze zdefiniowanych metod specjalnych
 - posiada metodę o sygnaturze `double get()`
 - jest duża, tzn. wartość `sizeof(Resource)` jest większa niż rozmiar stosu
 
