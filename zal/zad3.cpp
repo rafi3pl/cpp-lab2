@@ -2,7 +2,7 @@
 
 #include "ResourceManager.hpp"
 
-TEST_CASE("copy semantics", "[]")
+TEST_CASE("Move semantics", "[]")
 {
     {
         ResourceManager rm1;
