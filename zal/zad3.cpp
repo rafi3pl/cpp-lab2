@@ -9,12 +9,11 @@ TEST_CASE("copy semantics", "[]")
         const auto      getv = rm1.get();
         ResourceManager rm2{std::move(rm1)};
 
-        REQUIRE(ConstructionTracker::moves == 1);
         REQUIRE(getv == rm2.get());
 
         ResourceManager rm3;
         rm3 = std::move(rm2);
-        REQUIRE(ConstructionTracker::mv_asgn == 1);
+        REQUIRE(ConstructionTracker::live == 1);
         REQUIRE(rm1.get() == rm3.get());
     }
     REQUIRE(ConstructionTracker::live == 0);
