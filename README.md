@@ -376,7 +376,7 @@ Konkretnie, zwraca on referencję do obiektu, do którego nastąpiło przypisani
 Celem tego zabiegu jest umożliwienie łączenia przypisań w jeden ciąg, np. `a = b = c = d;`.
 Jest on możliwy dzięki słowu kluczowemu `this`.
 `this` jest wskaźnikiem do obiektu, którego metoda jest wołana i można korzystać z niego w każdej metodzie klasy.
-Dodajmy na koniec, że zwracanie referencji do obiektu jest kwestią konwencji (w ten sposób postępuje też kompilator, jeżeli nie zdefiniujemy), a nie obowiązkiem.
+Dodajmy na koniec, że zwracanie referencji do obiektu jest kwestią konwencji (w ten sposób postępuje też kompilator, jeżeli nie zdefiniujemy tego operatora), a nie obowiązkiem.
 
 #### Zadanie 17
 Dodaj do klasy `Wektor` kopiujący operator przypisania.
