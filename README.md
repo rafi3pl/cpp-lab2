@@ -357,7 +357,7 @@ Jeżeli z kolei nie chcemy, aby klasa miała konstruktor kopiujący, możemy go 
 ```C++
 T(const T& t) = delete;
 ```
-Usuwać można także inne (niespecjalne) metody oraz "wolnostojące" funckje.
+Usuwać można także inne (niespecjalne) metody oraz "wolnostojące" funkcje.
 Jest to dość często spotykany zabieg, zapobiegający niepoprawnemu użytkowaniu kodu, który piszemy.
 W przypadku zawołania usuniętej funkcji, kompilator w jasny i zrozumiały sposób zakomunikuje błąd.
 
