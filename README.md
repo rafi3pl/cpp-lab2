@@ -448,7 +448,7 @@ int main()
 	print_int(13);	     // przeciążenie 2, bo '13' to rvalue
 }
 ```
-W drugim przeciężeniu funkcji `print_int` pracujemy z argumentem normalnie - RVR nie wymaga od nas żadnych szczególnych operacji.
+W drugim przeciążeniu funkcji `print_int` pracujemy z argumentem normalnie - RVR nie wymaga od nas żadnych szczególnych operacji.
 Mamy za to gwarancję, że argument ten nie "ucieknie" z naszej funkcji, tzn. po zakończeniu wykonania naszej funkcji nikt inny nie będzie próbował go użyć.
 Możemy więc zrobić z nim co chcemy, np. zwolnić jego zasoby po ich wykorzystaniu.
 Podkreślmy też, że usunięcie jednego z powyższych przeciążeń spowoduje błąd kompilacji.
@@ -458,7 +458,7 @@ Jeżeli piszemy funkcję, dla której nie ma znaczenia, czy argument jest RVR cz
 void print_int(const int& i) { std::cout << "const ref: " << i << '\n'; };
 ```
 Jeżeli zdefiniujemy tylko powyższe przeciążenie, `main` z powyższego przykładu skompiluje się poprawnie.
-Dzieje się tak dzięki temu, że stałe referencje rządzą się specjalnymi zasadami przedłużania życia (ang. `lifetime extension`), destrukcja obiektu na które wskazują odwlekana jest do czasu wyjścia ze scope'u referencji.
+Dzieje się tak dzięki temu, że stałe referencje rządzą się specjalnymi zasadami przedłużania życia (ang. *lifetime extension*), destrukcja obiektu na które wskazują odwlekana jest do czasu wyjścia ze scope'u referencji.
 W praktyce oznacza to, że poniższy kod jest poprawny
 ```C++
 const int& i = getInt(); // OK, lifetime zwróconej wartości przedłużony
@@ -476,7 +476,7 @@ Ta opcja potrafi obsłużyć także sytuację, w której użytkownik poda do fun
 Tej opcji raczej nie stosujemy, gdyż może ona prowadzić do bugów (niechcący podajemy argument, którego wcale nie chcieliśmy modyfikować).
 Zamiast tego korzystamy z argumentów wyjściowych.
 `a = fun(a);` bardziej jawnie wyraża nasze intencje niż `fun(a);`
-- Referencję rvalue, gdy chcemy obsłużyć sytuację, w której nasza funkcja przejmuje własność nad jakimś obiektem.
+- Referencję rvalue (`T&&`), gdy chcemy obsłużyć sytuację, w której nasza funkcja przejmuje własność nad jakimś obiektem.
 Często stosujemy tę opcję obok innych przeciążeń (np. obok stałej referencji) jako optymalizacja dla szczególnego przypadku.
 
 ### `std::move`
@@ -490,10 +490,10 @@ void fun(S&&) { /* ... */ }      // optymalizacja dla RVR
 int main()
 {
     S s;
-	// Pracujemy z s...
-	fun(s);
-	// Teraz nie potrzebujemy s
-	// Pracujemy dalej nad czymś innym...
+    // Pracujemy z s...
+    fun(s);
+    // Teraz nie potrzebujemy s
+    // Pracujemy dalej nad czymś innym...
 }
 ```
 W powyższym przykładzie zostanie wywołane przeciążenie `fun(const S&)`, gdyż `s` jest lvalue.
@@ -613,7 +613,7 @@ Dodaj do klasy `Wektor` konstruktor przenoszący.
 Pamiętaj, że musisz zmodyfikować także obiekt *z którego* przenosisz tak, aby jego zniszczenie nie powodowało niepożądanych skutków ubocznych.
 
 ### Przenoszący operator przypisania
-Ostatnią szczególną metodą klas jest przenoszący operator przypisania, o sygnaturze `T operator=(T&&)`.
+Ostatnią szczególną metodą klas jest przenoszący operator przypisania, o sygnaturze `T& operator=(T&&)`.
 Przenosi on obiekt `b` na obiekt `a` (gdzie `a` i `b` nie muszą być różne).
 
 #### Zadanie 19
