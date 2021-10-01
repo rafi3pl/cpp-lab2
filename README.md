@@ -1,7 +1,7 @@
 # Instrukcja II
 ## Wstęp
 ### Zasoby
-Na tych zajęciach skupimy się na zarządzaniu zasobami, życiem obiektów oraz metodom do tego służącym.
+Na tych zajęciach skupimy się na zarządzaniu zasobami, życiem obiektów oraz metodach do tego służącym.
 Jest to temat kluczowy w C++, ponieważ język ten nie posiada automatycznego zarządzania zasobami, np. w postaci garbage collectora dostępnego w Javie czy C#.
 Jest to, z jednej strony, problematyczne, gdyż zmusza nas do poświęcenia uwagi oraz czasu na sprawy, które mogłyby potencjalnie zostać załatwione przez runtime programu, bez naszego udziału.
 Z drugiej strony, nie musimy płacić za wygodę takich rozwiązań wydajnością kodu.
@@ -24,13 +24,13 @@ Akronim ten, pomimo dość tajemniczo brzmiącego rozwinięcia, opisuje bardzo p
 Dzięki temu kod konieczny do zarządzania zasobem piszemy w jednym miejscu, a następnie wykorzystujemy go w trakcie normalnej pracy z danym obiektem.
 Takie podejście ma następujące zalety:
 
-- Zwiększa poprawność kodu. Obiekty są automatycznie niszczone przy wyjściu ze scope'u, także nigdy nie zapomnimy już np. zwolnić pamięci! Znak `}` jest naszym przyjacielem.
+- Zwiększa poprawność kodu. Obiekty są automatycznie niszczone przy wyjściu ze scope'u, także nigdy nie zapomnimy już np. zwolnić pamięci! Znak "`}`" jest naszym przyjacielem.
 - Zmniejsza liczbę linijek kodu, które musimy napisać.
 - Pozwala zachować poprawność programu w sytuacjach wyjątkowych.
 
 O wyjątkach mowa będzie dopiero za na ostatnich zajęciach.
-Na tę chwilę powiedzmy tylko, że są sytuacje, w których jakaś operacja może się nie powieść i program natychmiast przerwie wykonywanie bieżącej funkcji, funkcji, która ją zawołała, itd., aż do momentu, w którym przewidziana jest obsługa takiej wyjątkowej sytuacji (tzw. rozwijanie stosu, ang. _stack unwinding_).
-Przed opuszczeniem tych funkcji, program postara się jednak zniszczyć wszystkie obiekty, które zostały dotychczas stworzone.
+Na tę chwilę powiedzmy tylko, że są sytuacje, w których jakaś operacja może się nie powieść i program natychmiast przerwie wykonywanie bieżącej funkcji, funkcji, która ją zawołała, itd., aż do momentu, w którym przewidziana jest obsługa takiej wyjątkowej sytuacji.
+Przed opuszczeniem tych funkcji, program postara się jednak zniszczyć wszystkie obiekty, które zostały dotychczas stworzone (tzw. rozwijanie stosu, ang. _stack unwinding_).
 Dzięki zastosowaniu RAII zapewniamy poprawne zwolnienie zasobów, co jest szczególnie ważne, jeżeli program ma odzyskać sprawność.
 Przykładowo, klient może próbować połączyć się z serwerem przy użyciu funkcji, która alokuje pamięć.
 Serwer nie odpowiada jednak przez jakiś czas, w związku z czym klient decyduje się na porzucenie próby połączenia w trybie awaryjnym.
@@ -40,7 +40,7 @@ Dzięki odpowiednio napisanemu destruktorowi, można uniknąć wycieku zaalokowa
 RAII jest jednak sposobem projektowania kodu, nie elementem języka C++ (RAII miało swój początek w C++, ale obecnie wykorzystywane jest także np. w językach Ada i Rust).
 Zapoznajmy się z konkretną funkcjonalnością oferowaną przez C++, która pozwala stosować RAII, a także inne mechanizmy służące do optymalnego i niekłopotliwego zarządzania zasobami.
 Skupimy się tu na pamięci, ale innymi zasobami zarządza się analogicznie.
-Nadzieją autora jest, że po wykonaniu tej instrukcji czytelnik potrafić będzie pisać czysty kod, który nie powoduje wycieków oraz nie wykorzystuje 10kB tam, gdzie wystarczy 1kB.
+Nadzieją autorów jest, że po wykonaniu tej instrukcji czytelnik potrafić będzie pisać czysty kod, który nie powoduje wycieków oraz nie wykorzystuje 10kB tam, gdzie wystarczy 1kB.
 
 ## Dynamiczna alokacja pamięci w C++
 Zanim przejdziemy do zarządzania zasobami, musimy dowiedzieć się, jak je w ogóle stworzyć. Przypomnijmy, jak wyglądała alokacja pamięci w C:
@@ -49,10 +49,10 @@ Zanim przejdziemy do zarządzania zasobami, musimy dowiedzieć się, jak je w og
 // Poniższe 3 linijki zazwyczaj zapisywaliśmy w 1, tutaj rozbijamy ją dla celów dydaktycznych
 const size_t rozmiar_doubla = sizeof(double);
 void*        wynik_alokacji = malloc(rozmiar_doubla);
-double*      liczba         = (double*)wynik_alokacji;
-*liczba = 42.;
+double*      liczba_wsk     = (double*)wynik_alokacji;
+*liczba_wsk = 42.;
 // Użyj do czegoś wartości 42...
-free(liczba);
+free(liczba_wsk);
 ```
 
 Powyższe odwołanie do funkcji `malloc` czytamy jako "zaalokuj blok pamięci o wielkości \[rozmiar `double`\] bajtów, a następnie podaj mi adres tego bloku pamięci".
@@ -79,7 +79,7 @@ double*            wektor = new double[n];
 delete[] wektor;
 ```
 
-ma tę samą interpretację. Przy alokowaniu tablic musimy jedynie pamiętać o użyciu operatora `delete[]` zamiast `delete`.
+ma analogiczną interpretację. Przy alokowaniu tablic musimy jedynie pamiętać o użyciu operatora `delete[]` zamiast `delete`.
 
 Na tych zajęciach spróbujemy napisać klasę `Wektor`, reprezentującą wektor należacy do przestrzeni R<sup>n</sup>, automatycznie dostosowujący swój rozmiar do potrzeb użytkownika (podobnie jak zachowują się wektory np. w matlabie).
 Zaznaczmy tu, że zachowanie tej klasy będzie inne, niż klasy `std::vector<double>` (z późniejszych instrukcji), o czym należy pamiętać.
@@ -106,10 +106,11 @@ Napisz getter (ale nie setter) dla tego pola.
 #### Zadanie 6
 Dodaj do klasy `Wektor` publiczną metodę `zmienDlugosc`, która przyjmuje zmienną typu całkowitego, reprezentującą nową długość wektora.
 
-- Jeżeli żądana długość jest mniejsza lub równa obecnej pojemności wektora oraz mniejsza lub równa obecnej długości zmniejsz jedynie wartość pola `dlugosc`.
-- Jeżeli żądana długość jest mniejsza lub równa obecnej pojemności wektora oraz większa od długości zwiększ odpowiednio wartość pola `dlugosc` i wyzeruj elementy tablicy, które znalazły się w teraz wektorze (nie wiemy, co było tam wcześniej).
+- Jeżeli żądana długość jest mniejsza lub równa obecnej pojemności wektora oraz mniejsza lub równa obecnej długości, zmniejsz jedynie wartość pola `dlugosc`.
+- Jeżeli żądana długość jest mniejsza lub równa obecnej pojemności wektora oraz większa od długości, zwiększ odpowiednio wartość pola `dlugosc` i wyzeruj elementy tablicy, które znalazły się teraz w wektorze (nie wiemy, co było tam wcześniej).
 - Jeżeli żądana długość jest większa niż obecna pojemność wektora, zaalokuj nowy blok pamięci, przepisz do niego istniejące elementy wektora i wyzeruj te nowoutworzone.
 Nie zapomnij o skasowaniu starego bloku pamięci!
+- Sytuacja, w której pojemność jest mniejsza od długości wektora, jest niemożliwa.
 
 #### Zadanie 7
 Przetestuj, czy stworzona przez Ciebie klasa zachowuje się zgodnie z oczekiwaniami.
@@ -117,7 +118,7 @@ Przydatna do tego może być metoda `print`.
 
 ---
 
-<sup>1</sup> Formalnie, wbudowane typy nie mają konstruktorów, ale także możemy je inicjalizować przy użyciu nawiasów `{ }`.
+<sup>1</sup> Formalnie, wbudowane typy (`char`, `int`, `float` itd.) nie mają konstruktorów, ale także możemy je inicjalizować przy użyciu nawiasów `{ }`.
 Prezentowany kod zadziała analogicznie dla dowolnego innego typu.
 
 <sup>2</sup> Ściślej mówiąc, operatory `new`, `new[]`, `delete` i `delete[]` są zdefiniowane w nagłówku `new`, ale jest on dołączany nawet bez jawnego zawołania `#include <new>`.
@@ -149,7 +150,8 @@ Taki program wydrukuje oczywiście `1 0`, gdyż funkcja `print_plus1` robi kopi�
 Spójrzmy na analogiczny kod w C++:
 
 ```C++
-class T { /* ... */ } ;
+class T { /* ... */ };
+
 void fun(T obj)
 {
     // Zrób coś z obj...
@@ -162,7 +164,7 @@ int main()
 }
 ```
 
-Podobnie jak wyżej, funkcja `fun` będzie działać na *kopii* argumentu `t` (o tym, co dokładnie znaczy kopia w kontekście klasy powiemy za chwilę).
+Podobnie jak wyżej, funkcja `fun` będzie działała na *kopii* argumentu `t` (o tym, co dokładnie znaczy kopia w kontekście klasy powiemy za chwilę).
 Jak już ustaliliśmy, obiekt może być "duży", tzn. być właścicielem jakichś zasobów, mieć wiele pól, itd.
 Wykonywanie jego kopii może nas wtedy kosztować zarówno czas, jak i pamięć.
 Ponad to, podobnie jak wyżej, nie możemy bezpośrednio modyfikować jego wartości.
@@ -703,6 +705,67 @@ Jednymi z elementarnych zasad w programowaniu obiektowym w C\+\+ są zasady zera
 Zasada 0 mówi, że jeżeli nie chcemy wymusić żadnego szczególnego zachowania przy kopiowaniu, prznoszeniu lub niszczeniu obiektów, to nie należy definiować żadnej ze szczególnych metod i korzystać z tych, które zostaną domyślnie wygenerowane przez kompilator.
 Zasada 5 mówi z kolei, że jeżeli definiujemy choć jedną ze szczególnych metod, to powinniśmy także zdefiniować (lub zdefaultować, jeżeli to możliwe) wszystkie pozostałe.
 Zasady te pomagają unikać bugów wynikających np. z nieświadomego zawołania kopiowania tam, gdzie możnaby jakiś obiekt przenieść.
+
+### Przydatna sztuczka: przyjmij kopię i przenieś
+Na koniec pokażemy jeszcze często spotykany schemat, pozwalający zaoszczędzić kilka linijek kodu.
+Powiedzmy, że chcemy napisać klasę `ParaWektorow`, która wiąże ze sobą 2 obiekty typu `Wektor`.
+W najprostszym wydaniu, może wyglądać ona następująco:
+
+```C++
+struct ParaWektorow
+{
+    Wektor pierwszy;
+    Wektor drugi;
+};
+```
+
+Musimy teraz dopisać konstruktory.
+Aby w pełni wykorzystać optymalizacje opisane powyżej, możemy zdefiniować 4 konstruktory:
+
+```C++
+struct ParaWektorow
+{
+    ParaWektorow(const Wektor& w1, const Wektor& w2) : pierwszy{w1}, drugi{w2}             {}
+    ParaWektorow(const Wektor& w1, Wektor&& w2) : pierwszy{w1}, drugi{std::move(w2)}       {}
+    ParaWektorow(Wektor&& w1, const Wektor& w2) : pierwszy{std::move(w1)}, drugi{w2}       {}
+    ParaWektorow(Wektor&& w1, Wektor&& w2) : pierwszy{std::move(w1)}, drugi{std::move(w2)} {}
+
+    Wektor pierwszy;
+    Wektor drugi;
+};
+```
+
+Jest to nieco uciążliwe, a złożoność tego rozwiązania rośnie kombinatorycznie wraz z liczbą pól klasy.
+Zamiast tego, możemy zdefiniować tylko jeden konstruktor:
+
+```C++
+struct ParaWektorow
+{
+    ParaWektorow(Wektor w1, Wektor w2) : pierwszy{std::move(w1)}, drugi{std::move(w2)} {}
+
+    Wektor pierwszy;
+    Wektor drugi;
+};
+
+int main()
+{
+    Wektor w1 = getW1();
+    Wektor w2 = getW2();
+    ParaWektorow pw1{w1, w2};                       // *
+    ParaWektorow pw2{std::move(w1), std::move(w2)}; // **
+    // ...
+}
+```
+
+Ceną, którą płacimy za takie rozwiązanie, jest dodatkowe wywołanie konstruktora *przenoszącego*.
+W linijce oznaczonej jedną gwiazdką, `w1` i `w2` są najpierw kopiowane, a następnie ich kopie są przenoszone do pól `pw1`.
+W linijce oznaczonej 2 gwiazdkami, `w1` i `w2` są najpierw przenoszone do konstruktora, a następnie dalej przenoszone do pól `pw2`.
+Koszt przenoszenia jest jednak bardzo niewielki, gdyż wiąże się jedynie z przestawieniem paru wskaźników, nie ma konieczności realokacji, ani kopiowania zawartości wektora.
+Rozwiązanie to jest zatem lepsze, gdyż zwiększa czytelność kodu i zmniejsza pole do popełnienia błędu.
+
+Przykłady te ilustrują także bardzo dobrze działanie zasady 0.
+Dzięki odpowiedniemu zdefiniowaniu metod specjalnych klasy `Wektor`, możemy pozostawić stworzenie tych metod dla klasy `ParaWektorow` kompilatorowi.
+Ponownie, oszczędzamy pracy i nie dajemy sobie możliwości popełnienia błędu.
 
 #### Zadanie na koniec
 Jeżeli nie jest dla Ciebie do końca jasne, kiedy wołany jest który konstruktor lub operator przenoszenia, nie przejmuj się.
