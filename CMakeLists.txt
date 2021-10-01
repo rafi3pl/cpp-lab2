@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(lab1_zal)
+project(lab2_zal)
 
 add_library(Lab2 INTERFACE)
-target_include_directories(Lab2 INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(Lab2 INTERFACE include)
 set_target_properties(Lab2 PROPERTIES
     INTERFACE_COMPILE_FEATURES cxx_std_17
 )
