@@ -13,7 +13,7 @@ Twoim zadaniem jest napisanie klasy `ResourceManager`, która:
 
 - jest właścicielem (czyt. zarządza) obiektu typu `Resource`
 - posiada metodę `double get()`, która zwraca wynik zawołania metody `get` obiektu, którym zarządza
-- posiada konstruktor domyślny, który inicjalizuje obiekt typu `Resource` tak, aby nie zarządzał żadnym zasobem
+- posiada konstruktor domyślny, który inicjalizuje zarządzany obiekt przy pomocy domyślnego konstruktora klasy `Resource`
 - posiada 5 dobrze zdefiniowanych metod specjalnych
 - jest mała, tzn. mieści się na stosie
 
