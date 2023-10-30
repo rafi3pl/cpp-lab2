@@ -20,6 +20,6 @@ Twoim zadaniem jest napisanie klasy `ResourceManager`, która:
 Krótko mówiąc, `ResourceManager` ma być klasą RAII, która zarządza obiektem `Resource`.
 Testy weryfikujące poprawność wykonania zadania będą sprawdzały następujące 3 kryteria:
 
-1. Brak wycieków pamięci (1 punkt)
-2. Poprawne kopiowanie (2 punkty)
-3. Poprawne przenoszenie (2 punkty)
+1. Brak wycieków pamięci (2 punkt)
+2. Poprawne kopiowanie (3 punkty)
+3. Poprawne przenoszenie (0 punkty) - zadanie dodatkowe
